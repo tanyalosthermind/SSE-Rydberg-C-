@@ -132,7 +132,7 @@ public:
         }
 
         // debugging
-        v0 = 0;
+        //v0 = 0;
         int leg_counter = 0;
         int n_id = 0;
         int n_offd = 0;
@@ -282,8 +282,8 @@ public:
             } else if (op < 2 * n_sites){
                 array<int, 2> bond = operator_to_bond(op, Lx, Ly);
                 int s1 = bond[0];
-                int s2 = bond[1];
-                nc = color[4 * p];
+                //int s2 = bond[1];
+                //nc = color[4 * p];
                 if (op % 2 != 0){
                     spins[s1] = - spins[s1];
                 }
