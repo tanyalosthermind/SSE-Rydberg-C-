@@ -50,49 +50,21 @@ array<int, 2> site_to_xy(int n, int Lx, int Ly){
 }
 
 int bond_to_operator(int s0, int s1, int Lx, int Ly){
-        int n_sites = Lx * Ly;
-        int k = 2 * n_sites - 1;
-        int op = -1;
-
-        if (s0 != s1) {
-            for (int i = 0; i < n_sites; i++){
-                for (int j = 0; j < n_sites; j++){
-                    if (i == j){
-                        continue;
-                    }
-                    k++;
-                    if (i == s0 && j == s1) {
-                        op = k;
-                    }
-                }
-            }
-        }
-        return op;
+    return (2 + s0) * Lx * Ly - 1 - s0 + s1 + int(s0 > s1);
 }
 
 array<int, 2> operator_to_bond(int op, int Lx, int Ly) {
     int n_sites = Lx * Ly;
     int k = 2 * n_sites - 1;
     array<int, 2> bond;
-
-    if (op < 2 * n_sites) {
+    if (op <= k) {
         bond[0] = op / 2;
         bond[1] = op / 2;
-    }
-    else if (op >= 2 * n_sites) {
-        for (int i = 0; i < n_sites; i++) {
-            for (int j = 0; j < n_sites; j++) {
-                if (i == j) {
-                    continue;
-                }
-                k++;
-                if (op == k) {
-                    bond[0] = i;
-                    bond[1] = j;
-                    // return bond;
-                }
-            }
-        }
+    } else {
+        op -= (k + 1);
+        bond[0] = op / (n_sites - 1);
+        bond[1] = op % (n_sites - 1) + 1;
+        if (bond[1] <= bond[0]) --bond[1];
     }
     return bond;
 }
@@ -134,17 +106,10 @@ int vec_min(int s0, int s1, int Lx, int Ly) {
     //cout << "new: dx = " << dx << " dy = " << dy << endl;
     int size_x = Lx / 2 + 1;
     int size_y = Ly / 2 + 1;
-    vector<vector<int> > vec_list(size_x, vector<int>(size_y, 0));
-    int nc = 0;
-    for (int dx_ = 0; dx_ <= Lx / 2; dx_++){
-        for (int dy_ = 0; dy_ <= Ly / 2; dy_++) {
-            if (dx_ <= dy_){
-                vec_list[dx_][dy_] = vec_list[dy_][dx_] = nc;
-                nc++;
-            }
-        }
+    if (dx > dy) {
+        std::swap(dx, dy);
     }
-    return vec_list[dx][dy];
+    return size_x * (size_x + 1) / 2 - (size_x - dx + 1) * (size_x - dx) / 2 + dy - dx;
 }
 
 
@@ -176,17 +141,17 @@ public:
 
         int n_sites = Lx * Ly;
         int M = 20;
-        vector <int> range_N;
+        vector <int> range_N(n_sites);
         for (int i = 0; i < n_sites; i++) {
-            range_N.push_back(i);
+            range_N[i] = i;
         }
-        shuffle(range_N.begin(), range_N.end(), rng); 
+        shuffle(range_N.begin(), range_N.end(), rng);
+        spins.resize(range_N.size()); 
         for (int i = 0; i < range_N.size(); i++) {
-            spins.push_back(2* (range_N[i] % 2) - 1);
+            spins[i] = (2* (range_N[i] % 2) - 1);
         }
-        for (int p = 0; p < M; p++) {
-            op_string.push_back(-1);
-        }
+        op_string = vector<int>(M, -1);
+
     }
 
     double potential(int s0, int s1){
@@ -221,14 +186,14 @@ public:
         int n_sites = Lx * Ly;
         int size_v =  (Lx / 2 + 1) * (Lx / 2 + 2) / 2;
         vector<double> db(size_v, 0.0);
-        double d_norm = 0.0;
+        int d_norm = 0;
         int i1 = site(Lx / 2, Ly / 2, Lx, Ly);
         for (int j1 = 0; j1 < n_sites; j1++) {
             if (j1 != i1){
                 double dist = distance_pbc(i1, j1, Lx, Ly);
                 if (dist <= cutoff){
                     cout << "r = " << dist << endl;
-                    d_norm += 1.0;
+                    d_norm++;
                 }
             }
         }
@@ -241,7 +206,7 @@ public:
                     db[vec] = 0.0;
                 } else {
                     //cout << "for " << "(" << i << ", " << j << ") dist = " << dist << endl;
-                    db[vec] = d / d_norm / 2.0;
+                    db[vec] = d / (double(d_norm)) / 2.0;
                 }
             }
     }

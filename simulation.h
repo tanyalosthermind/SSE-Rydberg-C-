@@ -117,7 +117,7 @@ public:
         vector<double> Ms(n_bins, 0.0);
 
         cout << "begin measurement..." << endl;
-        for (int n_bin; n_bin < n_bins; n_bin++){
+        for (int n_bin = 0; n_bin < n_bins; n_bin++){
             Measurement Meas;
             Meas.measure(Config.spins, Config.op_string, dbi, Vi, Ci, P.Pfull, P.Pcumulative, stag, Config.beta, n_updates_measure);
             double n_mean = getAverage(Meas.ns);
