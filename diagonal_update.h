@@ -44,12 +44,8 @@ int diagonal_update(vector<int>& spins, vector<int>& op_string, const vector<dou
     int M = op_string.size();
 
     //int n = static_cast<int>(count_if(op_string.begin(), op_string.end(), [](int op) { return op != -1; }));
-    int n = 0;
-    for (std::vector<int>::const_iterator it = op_string.begin(); it != op_string.end(); ++it) {
-    if (*it != -1) {
-        n++;
-    }
-    }
+    int n = std::count_if(op_string.begin(), op_string.end(), [](int i) { return i != -1; });
+
     //cout << "n = " << n;
 
     double norm = 0.0;
@@ -60,6 +56,9 @@ int diagonal_update(vector<int>& spins, vector<int>& op_string, const vector<dou
     }
     //cout << "norm = " << norm << endl;
     double prob_ratio = norm * beta;
+    double prob_1 = prob_ratio / (M - n);
+    double prob_2 = (M - n + 1) / prob_ratio;
+
     for (int p = 0; p < M; ++p) {
         int op = op_string[p];
         if (op == -1){
@@ -67,8 +66,7 @@ int diagonal_update(vector<int>& spins, vector<int>& op_string, const vector<dou
             int index2 = sample(Pij[index1]);
             int s0 = index1;
             int s1 = index2;
-            double prob = prob_ratio / (M - n);
-            if (dis(rng) < prob){
+            if (dis(rng) < prob_1){
                 if (s0 == s1) {
                     op_string[p] = 2 * s0;
                     n++;
@@ -98,8 +96,7 @@ int diagonal_update(vector<int>& spins, vector<int>& op_string, const vector<dou
                 }
             }
         } else if ((op % 2 == 0 && op < 2 * n_sites) || op >= 2 * n_sites) {
-            double prob = (M - n + 1) / prob_ratio;
-            if (dis(rng) < prob){
+            if (dis(rng) < prob_2){
                 op_string[p] = -1;
                 n--;
             }
