@@ -43,13 +43,13 @@ uniform_real_distribution<double> dis(0.0, 1.0);
 int main() {
     double d = 1.1;
     double Omega = 1.0;
-    double Rb = 1.0;
+    double Rb = 1.2;
     double a = 1.0;
-    double cutoff = 1.9;
+    double cutoff = 4 * a;
     double eps = 0.5;
-    int Lx = 4;
-    int Ly = 4;
-    double beta = 20.0;
+    int Lx = 8;
+    int Ly = 8;
+    double beta = 8.0;
     
     auto start = high_resolution_clock::now();
     Simulation S(d, Omega, Rb, a, cutoff, eps, Lx, Ly, beta, 1000, 400);

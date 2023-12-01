@@ -27,12 +27,15 @@
 #include <cstdlib>
 #include <array>
 #include <iomanip>
+#include <complex>
 
 #include "configuration.h"
 #include "sampling.h"
 #include "diagonal_update.h"
 #include "cluster_update.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 using namespace std;
 using namespace std::chrono;
@@ -83,6 +86,7 @@ public:
     vector <int> ns;
     vector <int> nums;
     vector <int> ms;
+    vector <int> ft;
 
     void measure (vector<int>& spins, vector<int>& op_string, vector<double>& dbi, vector<double>& V_i, vector<double>& C_i, vector<vector<double> >& Pij, 
     vector<double>& Pc, vector<int> stag, double beta, int n_updates_measure){
@@ -93,8 +97,11 @@ public:
             //cout << "n = " << n << endl;
             cluster_update(spins, op_string, dbi, V_i, C_i);
             ns.push_back(n);
-            nums.push_back(count(spins.begin(), spins.end(), 1));
+            int ni = count(spins.begin(), spins.end(), 1);
+            nums.push_back(ni);
             ms.push_back(abs(staggered_magnetization(spins, stag)));
+            complex<double> j = sqrt(-1); 
+            //ft.push_back(ni * exp(j * M_PI));
             auto stop = high_resolution_clock::now();
             //auto duration = duration_cast<seconds>(stop - start);
             duration<double> duration = stop - start;
