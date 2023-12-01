@@ -99,7 +99,7 @@ public:
             //auto duration = duration_cast<seconds>(stop - start);
             duration<double> duration = stop - start;
             double time = duration.count();
-            cout << fixed << setprecision(15) << time  << endl;
+            //cout << fixed << setprecision(15) << time  << endl;
             //cout << "Time taken by one sweep: " << fixed << setprecision(10)  << time << " seconds" << endl;
         }
     }

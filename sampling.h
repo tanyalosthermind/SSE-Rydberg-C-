@@ -36,6 +36,8 @@ extern random_device rd;
 extern mt19937 rng;
 extern uniform_real_distribution<double> dis;
 
+
+/*
 int binary_search_(const vector<double>& cumulative_probs, double r) {
     int low = 0;
     int high = cumulative_probs.size() - 1;
@@ -50,7 +52,24 @@ int binary_search_(const vector<double>& cumulative_probs, double r) {
     }
     return low;
 }
+*/
+int get_index_from_cumulative_table(vector<double> probabilities, double r) {
+    double norm = accumulate(probabilities.begin(), probabilities.end(), 0.0);
+    int index = -1;
+    for (size_t i = 0; i < probabilities.size(); ++i) {
+        probabilities[i] = probabilities[i] / norm;
+        if (i) { 
+            probabilities[i] += probabilities[i - 1];
+        }
+        if (index == -1 && r <= probabilities[i]) {
+            index = i;
+        }
+    }
+    if (index == -1) index = probabilities.size() - 1;
+    return index;
+}
 
+/*
 vector<double> cumulative_table(const vector<double>& probabilities){
     vector <double> copy_prob = probabilities;
     double norm = accumulate(copy_prob.begin(), copy_prob.end(), 0.0);
@@ -61,15 +80,17 @@ vector<double> cumulative_table(const vector<double>& probabilities){
     partial_sum(copy_prob.begin(), copy_prob.end(), cumulative_probs.begin());
     return cumulative_probs;
 }
+*/
 
 int sample(const vector<double>& probabilities) {
-     vector<double> cumulative_probs = cumulative_table(probabilities);
+    //vector<double> cumulative_probs = cumulative_table(probabilities);
     // Generate a random number between 0 and 1
     double r = dis(rng);
     // Use binary search to find the corresponding outcome
-    int index = binary_search_(cumulative_probs, r);
+    //int index = binary_search_(cumulative_probs, r);
     //int index = binary_search(cumulative_probs, 0.45);
-    return index;
+    //return index;
+    return get_index_from_cumulative_table(probabilities, r);
 }
 
 class Probability{
@@ -85,7 +106,7 @@ public:
             for (int j = i; j < n_sites; j++) {
                 int vec = vec_min(i, j, Lx, Ly);
                 if (i == j){
-                    prob_dist[i][j] = Omega * 0.5;
+                    prob_dist[i][j] = Omega / 2;
                 } else {
                     double V = Vi[vec];
                     double db = dbi[vec];
@@ -99,10 +120,12 @@ public:
                 }
             }
         }
-        Pfull = prob_dist;
+        //Pfull = prob_dist;
+        Pfull = std::move(prob_dist);
 
         vector<double> Pc(n_sites, 1.0 / n_sites);
-        Pcumulative = Pc;
+        //Pcumulative = Pc;
+        Pcumulative = std::move(Pc);
     }
 };
 

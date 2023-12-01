@@ -44,12 +44,15 @@ int diagonal_update(vector<int>& spins, vector<int>& op_string, const vector<dou
     int M = op_string.size();
 
     //int n = static_cast<int>(count_if(op_string.begin(), op_string.end(), [](int op) { return op != -1; }));
+    /*
     int n = 0;
     for (std::vector<int>::const_iterator it = op_string.begin(); it != op_string.end(); ++it) {
     if (*it != -1) {
         n++;
     }
     }
+    */
+    int n = std::count_if(op_string.begin(), op_string.end(), [](int i) { return i != -1; });
     //cout << "n = " << n;
 
     double norm = 0.0;

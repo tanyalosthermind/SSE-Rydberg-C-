@@ -59,15 +59,18 @@ public:
         int Ly = static_cast<int>(sqrt(n_sites));
         int M = op_string.size();
         int n_ghostlegs = max_ghostlegs * M;
-        vector<int> vertex_list_(n_ghostlegs, 0);
-        vertex_list = vertex_list_;
+        //vector<int> vertex_list_(n_ghostlegs, 0);
+        //vertex_list = vertex_list_;
+        vertex_list = vector<int>(n_ghostlegs, 0);
         //for (int i = 0; i < n_ghostlegs; i++){ 
         //    vertex_list.push_back(0); 
         //}
-        vector<int> first_vertex_at_site_(n_sites, -1);
-        vector<int> last_vertex_at_site_(n_sites, -1);
-        first_vertex_at_site = first_vertex_at_site_;
-        last_vertex_at_site = last_vertex_at_site_;
+        //vector<int> first_vertex_at_site_(n_sites, -1);
+        //vector<int> last_vertex_at_site_(n_sites, -1);
+        //first_vertex_at_site = first_vertex_at_site_;
+        //last_vertex_at_site = last_vertex_at_site_;
+        first_vertex_at_site = std::move(vector<int>(n_sites, -1));
+        last_vertex_at_site = std::move(vector<int>(n_sites, -1));
         //for (int i = 0; i < n_sites; i++){ 
         //    first_vertex_at_site.push_back(-1); 
         //    last_vertex_at_site.push_back(-1);

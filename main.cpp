@@ -49,7 +49,7 @@ int main() {
     double eps = 0.5;
     int Lx = 4;
     int Ly = 4;
-    double beta = 0.1;
+    double beta = 20.0;
     
     auto start = high_resolution_clock::now();
     Simulation S(d, Omega, Rb, a, cutoff, eps, Lx, Ly, beta, 1000, 400);
