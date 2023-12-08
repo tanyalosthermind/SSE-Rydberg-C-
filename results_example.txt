@@ -1,0 +1,11 @@
+Number of calculated bins: 400
+Energy per site = -0.508345 ± 0.000408935
+Density = 0.21149 ± 0.000509931
+Magnetization per site = 0.103442 ± 0.00321578
+Order parameter = (0.113463,0) ± (0.00220156,0)
+
+
+
+
+
+

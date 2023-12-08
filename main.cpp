@@ -41,18 +41,23 @@ mt19937 rng(rd());
 uniform_real_distribution<double> dis(0.0, 1.0);
 
 int main() {
-    double d = 1.1;
+    double d = 1.0;
     double Omega = 1.0;
     double Rb = 1.2;
     double a = 1.0;
-    double cutoff = 4 * a;
+    double cutoff = 4.0 * a;
     double eps = 0.5;
     int Lx = 8;
     int Ly = 8;
-    double beta = 8.0;
+    double beta = 100.0;
+    double kx = M_PI;
+    double ky = M_PI;
+
+    bool line = false;
+    int line_step = 50;
     
     auto start = high_resolution_clock::now();
-    Simulation S(d, Omega, Rb, a, cutoff, eps, Lx, Ly, beta, 1000, 400);
+    Simulation S(d, Omega, Rb, a, cutoff, eps, Lx, Ly, beta, kx, ky, 1000, 400, line, line_step);
     auto stop = high_resolution_clock::now();
     //auto duration = duration_cast<seconds>(stop - start);
     duration<double> duration = stop - start;
@@ -62,6 +67,32 @@ int main() {
     cout << "L = " << Lx << "; Energy per site = " <<  S.Es_Eerrs[0] << " error = " << S.Es_Eerrs[1]  << " at T = " << 1/beta << endl;
     cout << "L = " << Lx << "; Particle density  = " <<  S.Ns_Nerrs[0] << " error = " << S.Ns_Nerrs[1]  << " at T = " << 1/beta << endl;
     cout << "L = " << Lx << "; Magnetization per site = " <<  S.Ms_Merrs[0] << " error = " << S.Ms_Merrs[1]  << " at T = " << 1/beta << endl;
+    cout << "L = " << Lx << "; Order parameter (" << kx << ", " << ky << ") = " <<  S.Fs_Ferrs[0] << " error = " << S.Fs_Ferrs[1]  << " at T = " << 1/beta << endl;
+    
+    
+   /*
+    Configuration Config(d, Omega, Rb, a, cutoff, eps, Lx, Ly, beta);
+    vector<double> Vi = Config.V_i();
+    vector<double> dbi = Config.db_i();
+    vector<double> Ci = Config.C_i(dbi, Vi);
+    Probability P(dbi, Vi, Ci, Config.Omega, Config.Lx, Config.Ly);
+    vector<int> stag = get_staggering(Config.Lx, Config.Ly);
+    vector<complex<double> > sites = get_power(M_PI, M_PI, Config.Lx, Config.Ly);
+    //cout << 
+    for (int i = 0; i < sites.size(); i++){
+        cout << "site = " << i << " powers = "<< sites[i] << endl;
+    }
+    complex<double> f = order_parameter(Config.spins, sites);
+    cout << "f = " << f << endl;
+    //const double pi = std::acos(-1.0);
+    //complex<double> j(0.0, 1.0);
+
+    //cout << exp(j * M_PI) << endl;
+    //cout << exp(j * pi) << endl;
+    //std::cout << std::fixed << " exp(i * pi) = " << std::exp(j * M_PI) << '\n';
+    */
+    //
+    
     /*
     cout << "n = " << site(0, 2, Lx, Ly) << endl;
 
@@ -142,8 +173,8 @@ int main() {
     cout << endl;
 
     cout << "------- OFF-DIAGONAL " << endl;
-    */
-    /*
+    
+    
     Vertexlist Vertex(Config.spins, Config.op_string);
     cout << "linked vertex list: " << endl;
     for (int i = 0; i < Vertex.vertex_list.size(); i++) {
@@ -160,10 +191,15 @@ int main() {
         cout << "i = " << i << " " << Vertex.last_vertex_at_site[i] << endl;
     }
     cout << endl;
-    */
-   /*
-   cluster_update(Config.spins, Config.op_string, db, V, C);
-   cout << "after off-diag. update spins: " << endl;
+
+    cout << "spins list: " << endl;
+    for (int i = 0; i < Vertex.spin_m.size(); i++) {
+        cout << "i = " << i << " " << Vertex.spin_m[i] << endl;
+    }
+    cout << endl;
+    
+    cluster_update(Config.spins, Config.op_string, db, V, C, line, line_step);
+    cout << "after off-diag. update spins: " << endl;
     for (int i = 0; i < Config.spins.size(); i++){
         cout << "site = " << i << " spin = "<< Config.spins[i] << endl;
     }

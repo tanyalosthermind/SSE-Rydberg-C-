@@ -44,11 +44,29 @@ void change_type(int v0, vector<int> & op_string, int n_sites){
     }
 }
 
+void prob(int spins0, int spins1, int vec, vector<double>& f_p, vector<double>& dbi, vector<double>& V_i, vector<double>& C_i, vector<int>& prob_in, int n_sites){
+    double db = dbi[vec];
+    if (spins0 == -1 && spins1 == -1){
+        f_p[0] += log(db + C_i[vec]);
+        f_p[1] += log(C_i[vec]);
+    } else if (spins0 == 1 && spins1 == 1){
+        f_p[0] += log(db + C_i[vec]);
+        f_p[1] += log(- V_i[vec] + 2 * db + C_i[vec]);
+    } else if (spins0 == -1 && spins1 == 1){
+        f_p[0] += log(- V_i[vec] + 2 * db + C_i[vec]);
+        f_p[1] += log(db + C_i[vec]);
+    } else if (spins0 == 1 && spins1 == -1){
+        f_p[0] += log(C_i[vec]);
+        f_p[1] += log(db + C_i[vec]);
+    }
+}
+
 class Vertexlist {
 public:
     vector <int> vertex_list;
     vector <int> first_vertex_at_site;
     vector <int> last_vertex_at_site;
+    vector <int> spin_m;
     int max_ghostlegs;
 
     
@@ -71,6 +89,7 @@ public:
         //last_vertex_at_site = last_vertex_at_site_;
         first_vertex_at_site = std::move(vector<int>(n_sites, -1));
         last_vertex_at_site = std::move(vector<int>(n_sites, -1));
+        spin_m = vector<int>(n_ghostlegs, 0);
         //for (int i = 0; i < n_sites; i++){ 
         //    first_vertex_at_site.push_back(-1); 
         //    last_vertex_at_site.push_back(-1);
@@ -108,6 +127,10 @@ public:
                 }
                 last_vertex_at_site[i] = v0 + 2;  // left outgoing vertex of op
                 last_vertex_at_site[j] = v0 + 3;  // right outgoing vertex of op
+                spin_m[v0] = spins[i];
+                spin_m[v0 + 1] = spins[j];
+                spin_m[v0 + 2] = spins[i];
+                spin_m[v0 + 3] = spins[j];
             } else if (op < 2 * n_sites){ // H±1a: site operator with 2 legs: v0 incoming and v2 outcoming
                 array<int, 2> v = operator_to_bond(op, Lx, Ly);
                 int i = v[0];
@@ -122,6 +145,13 @@ public:
                 //mark the ghostlegs as visited
                 vertex_list.at(v0+1) = -2;
                 vertex_list.at(v0+3) = -2;
+                if (op % 2 == 1){
+                    spins[i] = - spins[i];
+                }
+                spin_m[v0] = spins[i];
+                spin_m[v0 + 1] = spins[i];
+                spin_m[v0 + 2] = spins[i];
+                spin_m[v0 + 3] = spins[i];
             }
         }
         // now we need to connect vertices between top and bottom: PBC in imaginary time
@@ -470,11 +500,150 @@ public:
     }
     */
 
+   void lineupdate(vector<int>& spins, vector<int>& op_string, vector<int>& vertex_list, vector<int>& first_vertex_at_site, vector<int>& spin_m,
+     vector<double>& dbi, vector<double>& V_i, vector<double>& C_i){
+        int n_sites = spins.size();
+        int Lx = static_cast<int>(sqrt(n_sites));
+        int Ly = static_cast<int>(sqrt(n_sites));
+        int M = op_string.size();
+        int n_ghostlegs = max_ghostlegs * M;
+        vector<double> f_p(2, 1.0);
+        bool loop = false;
+        vector<int> prob_in(2, 0);
+        int v0 = -1;
+        int i_count = 0;
+        for (i_count; i_count < 3000; i_count++){
+            int factor = static_cast<int>(dis(rng) * M);
+            v0 = factor * max_ghostlegs;
+            if (op_string[v0 / 4] < 2 * n_sites && op_string[v0 / 4] >= 0){
+                break;
+            }
+        }
+        if (i_count >= 3000 - 1){
+            return;
+        }
+        //cout << "agreed on vertex " << v0 << " with count " << i_count << endl;
+        array<int, 2> bond = operator_to_bond(op_string[v0 / 4], Lx, Ly);
+        int s0 = bond[0];
+        //int s1 = bond[1];
+        int vs = v0;
+        int v1 = vs;
+        while (true) {
+            array<int, 2> v = operator_to_bond(op_string[v1 / 4], Lx, Ly);
+            int s1 = v[0];
+            int s2 = v[1];
+            if (s1 != s2){
+                int vec = vec_min(s1, s2, Lx, Ly);
+                int spins0 = spin_m[v1];
+                int spins1 = spin_m[v1 ^ 1];
+                prob(spins0, spins1, vec, f_p, dbi, V_i, C_i, prob_in, n_sites);
+                //cout << "1) fp = " << f_p[0] << " " << f_p[1] << endl;
+            }
+            int v2 = vertex_list[v1];
+            if (op_string[v2 / 4] < 2 * n_sites){
+                break;
+            } else {
+                v1 = v2 ^ 2;
+            }
+            if (v1 == vs){
+                loop = true;
+                break;
+            }
+        }
+
+        if (!(op_string[vs / 4] < 2 * n_sites) && !loop){
+            v1 = vs ^ 2;
+            while (true){
+                int v2 = vertex_list[v1];
+                if (v2 == vs){
+                    break;
+                }
+                if (op_string[v2 / 4] < 2 * n_sites){
+                    break;
+                } else {
+                    v1 = v2 ^ 2;
+                }
+                array<int, 2> v = operator_to_bond(op_string[v1 / 4], Lx, Ly);
+                int s1 = v[0];
+                int s2 = v[1];
+                if (s1 != s2){
+                    int vec = vec_min(s1, s2, Lx, Ly);
+                    int spins0 = spin_m[v1];
+                    int spins1 = spin_m[v1 ^ 1];
+                    prob(spins0, spins1, vec, f_p, dbi, V_i, C_i, prob_in, n_sites);
+                    //cout << "2) fp = " << f_p[0] << " " << f_p[1] << endl;
+                }
+            }
+        }
+        double w = exp(f_p[0] - f_p[1]); // ???
+        //cout << "w = " << w << endl;
+        vs = v0;
+        v1 = vs;
+
+        if (dis(rng) < w){
+            if (op_string[vs / 4] < 2 * n_sites){
+                change_type(vs, op_string, n_sites);
+            }
+            while (true){
+                int v2 = vertex_list[v1];
+                vertex_list[v1] = -1;
+                vertex_list[v2] = -1;
+                if (op_string[v2 / 4] < 2 * n_sites){
+                    change_type(v2, op_string, n_sites);
+                    break;
+                } else {
+                    v1 = v2 ^ 2;
+                }
+                if (v1 == vs){
+                    loop = true;
+                    break;
+                }
+            }
+            if (!(op_string[vs / 4] < 2 * n_sites) && !(loop)){
+                v1 = vs ^ 2;
+                while (true){
+                    int v2 = vertex_list[v1];
+                    vertex_list[v1] = -1;
+                    vertex_list[v2] = -1;
+                    if (v2 == vs){
+                        break;
+                    }
+                    if (op_string[v2 / 4] < 2 * n_sites){
+                        change_type(v2, op_string, n_sites);
+                        break;
+                    } else {
+                        v1 = v2 ^ 2;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < n_sites; i++) {
+            if (first_vertex_at_site[i] != -1){
+                if (vertex_list[first_vertex_at_site[i]] == -1){
+                    spins[i] = - spins[i];
+                }
+            } else {
+                if (dis(rng) < 0.5){
+                    spins[i] = - spins[i];
+                }
+            }
+        }
+     }
+
 };
 
-void cluster_update (vector<int>& spins, vector<int>& op_string, vector<double>& dbi, vector<double>& V_i, vector<double>& C_i){
-    Vertexlist V = Vertexlist(spins, op_string);
-    V.clusterupdate(spins, op_string, V.vertex_list, V.first_vertex_at_site, dbi, V_i, C_i);
+void cluster_update (vector<int>& spins, vector<int>& op_string, vector<double>& dbi, vector<double>& V_i, vector<double>& C_i, bool line, int line_step){
+    if (line){
+        for (int i = 0; i < line_step; i++){
+            //cout << "iteration of line update " << i << endl;
+            Vertexlist V = Vertexlist(spins, op_string);
+            V.lineupdate(spins, op_string, V.vertex_list, V.first_vertex_at_site, V.spin_m, dbi, V_i, C_i);
+        }
+    } else {
+        Vertexlist V = Vertexlist(spins, op_string);
+        V.clusterupdate(spins, op_string, V.vertex_list, V.first_vertex_at_site, dbi, V_i, C_i);
+    }
 }
 
 #endif // CLUSTER_UPDATE_H_INCLUDED

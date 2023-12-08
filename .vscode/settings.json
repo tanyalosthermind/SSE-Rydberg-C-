@@ -8,6 +8,10 @@
         "string": "cpp",
         "ios": "cpp",
         "iomanip": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "complex": "cpp",
+        "iosfwd": "cpp",
+        "chrono": "cpp",
+        "numeric": "cpp"
     }
 }

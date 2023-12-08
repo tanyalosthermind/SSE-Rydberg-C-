@@ -183,11 +183,13 @@ public:
     double a;
     double cutoff;
     double eps;
+    double kx; 
+    double ky;
 
     vector<int> spins;
     vector<int> op_string;
 
-    Configuration(double d_, double Omega_, double Rb_, double a_, double cutoff_, double eps_, int Lx_, int Ly_, double beta_){
+    Configuration(double d_, double Omega_, double Rb_, double a_, double cutoff_, double eps_, int Lx_, int Ly_, double beta_, double kx_, double ky_){
         d = d_;
         Omega = Omega_;
         Rb = Rb_;
@@ -197,6 +199,8 @@ public:
         Lx = Lx_;
         Ly = Ly_;
         beta = beta_;
+        kx = kx_;
+        ky = ky_;
 
         int n_sites = Lx * Ly;
         int M = 20;
